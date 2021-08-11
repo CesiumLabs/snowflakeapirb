@@ -325,7 +325,3 @@ class SnowflakeAPI
 		end
 	end
 end
-
-worker = SnowflakeAPI.new('NzQ5OTM2ODMwMDk4NTcxMzM1.MTYyODY5NjQzMDY3Mg==.61afaf2d5b3be6edbae03bcc279b212c')
-
-p worker.pokemon("pikachu").stats['hp'].to_str
