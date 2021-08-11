@@ -339,7 +339,8 @@ class SnowflakeAPI
 		end
 	end
 
-	# Returns information about current user
+	# Returns information about a github user
+	# @param user [String] The user's name
 	# @return [Hash]
 	def githubstats(user)
 		resp = @connection.get("githubstats", { "username" => user })
