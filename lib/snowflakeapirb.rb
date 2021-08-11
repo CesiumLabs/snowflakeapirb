@@ -3,7 +3,9 @@
 require "faraday"
 require "json"
 require "date"
-
+require_relative "snowflakeapirb/meme"
+require_relative "snowflakeapirb/pokemon"
+require_relative "snowflakeapirb/deno"
 class SnowflakeAPI
 	def initialize(api_key)
 		@token = api_key
@@ -50,25 +52,14 @@ class SnowflakeAPI
 	# Returns meme from 
 	# @param subreddit [String] subreddit to fetch meme from
 	# @return [Hash]
-	def meme(subreddit: nil)
+	def meme(subreddit)
 		resp = @connection.get("meme", { "sbr" => subreddit })
 		data = JSON.parse(resp.body)
 
 		if data["error"] and data["code"] and data["code"] != 200
 			raise RuntimeError.new("[#{data["code"]}] #{data["error"] or "Rejected with status code #{data["code"]}"}")
 		else
-			return {
-				"is_video" => data["isVideo"],
-				"nsfw" => data["nsfw"],
-				"created_at" => Date.parse(data["createdAt"]),
-				"url" => data["url"],
-				"upvotes" => data["ratings"]["upvote"],
-				"downvotes" => data["ratings"]["downvote"],
-				"comments" => data["ratings"]["comments"],
-				"subreddit" => data["subreddit"],
-				"title" => data["title"],
-				"link" => data["link"]
-			}
+			Spreader::Meme.new(data)
 		end
 	end
 
@@ -95,17 +86,7 @@ class SnowflakeAPI
 		if data["error"] and data["code"] and data["code"] != 200
 			raise RuntimeError.new("[#{data["code"]}] #{data["error"] or "Rejected with status code #{data["code"]}"}")
 		else
-			return {
-				"name" => data["name"],
-				"id" => data["id"],
-				"base_experience" => data["baseExperience"],
-				"height" => data["height"],
-				"weight" => data["weight"],
-				"type" => data["type"],
-				"moves" => data["moves"],
-				"stats" => data["stats"],
-				"image" => data["image"]
-			}
+			Spreader::Pokemon.new(data)
 		end
 	end
 
@@ -147,24 +128,7 @@ class SnowflakeAPI
 		if data["error"] and data["code"] and data["code"] != 200
 			raise RuntimeError.new("[#{data["code"]}] #{data["error"] or "Rejected with status code #{data["code"]}"}")
 		else
-			return {
-				"registry" => data["registry"],
-				"icon" => data["icon"],
-				"url" => data["url"],
-				"module" => {
-					"name" => data["module"]["name"],
-					"url" => data["module"]["url"],
-					"description" => data["module"]["description"],
-					"version" => data["module"]["version"],
-					"stars" => data["module"]["stars"],
-					"developer" => {
-						"name" => data["module"]["developer"]["name"],
-						"url" => data["module"]["developer"]["url"],
-					},
-					"github" => data["module"]["github"],
-					"created_at" => Date.parse(data["module"]["createdAt"])
-				}
-			}
+			Spreader::Deno.new(data)
 		end
 	end
 
@@ -356,8 +320,12 @@ class SnowflakeAPI
 				"repos" => data["repos"],
 				"pull_requests" => data["pullRequests"],
 				"issues" => data["issues"],
-				"npm_downloads" => data['npmDownloads']
+				"npm_downloads" => data["npmDownloads"]
 			}
 		end
 	end
 end
+
+worker = SnowflakeAPI.new('NzQ5OTM2ODMwMDk4NTcxMzM1.MTYyODY5NjQzMDY3Mg==.61afaf2d5b3be6edbae03bcc279b212c')
+
+p worker.pokemon("pikachu").stats['hp'].to_str
