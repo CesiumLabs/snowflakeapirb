@@ -356,7 +356,7 @@ class SnowflakeAPI
 				"repos" => data["repos"],
 				"pull_requests" => data["pullRequests"],
 				"issues" => data["issues"],
-				"npm_downloads" => data["npmDownloads]"
+				"npm_downloads" => data['npmDownloads']
 			}
 		end
 	end
