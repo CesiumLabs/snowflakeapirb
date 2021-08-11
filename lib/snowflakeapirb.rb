@@ -304,4 +304,59 @@ class SnowflakeAPI
 			}
 		end
 	end
+
+	# Returns API server status
+	# @return [Hash]
+	def stats
+		resp = @connection.get("stats")
+		data = JSON.parse(resp.body)
+
+		if data["error"] and data["code"] and data["code"] != 200
+			raise RuntimeError.new("[#{data["code"]}] #{data["error"] or "Rejected with status code #{data["code"]}"}")
+		else
+			return data
+		end
+	end
+
+	# Returns information about current user
+	# @return [Hash]
+	def me
+		resp = @connection.get("me")
+		data = JSON.parse(resp.body)
+
+		if data["error"] and data["code"] and data["code"] != 200
+			raise RuntimeError.new("[#{data["code"]}] #{data["error"] or "Rejected with status code #{data["code"]}"}")
+		else
+			return {
+				"user" => data["user"],
+				"pro" => data["pro"],
+				"ratelimits" => data["ratelimits"],
+				"banned" => data["banned"],
+				"requests" => data["requests"],
+				"token_created_timestamp" => data["tokenCreatedTimestamp"],
+				"created_timestamp" => data["createdTimestamp"]
+			}
+		end
+	end
+
+	# Returns information about current user
+	# @return [Hash]
+	def githubstats(user)
+		resp = @connection.get("githubstats", { "username" => user })
+		data = JSON.parse(resp.body)
+
+		if data["error"] and data["code"] and data["code"] != 200
+			raise RuntimeError.new("[#{data["code"]}] #{data["error"] or "Rejected with status code #{data["code"]}"}")
+		else
+			return {
+				"name" => data["name"],
+				"avatar" => data["avatar"],
+				"followers" => data["followers"],
+				"repos" => data["repos"],
+				"pull_requests" => data["pullRequests"],
+				"issues" => data["issues"],
+				"npm_downloads" => data["npmDownloads]"
+			}
+		end
+	end
 end
