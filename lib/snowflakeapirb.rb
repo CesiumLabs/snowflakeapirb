@@ -3,7 +3,14 @@
 require "faraday"
 require "json"
 require "date"
-
+require_relative "snowflakeapirb/meme"
+require_relative "snowflakeapirb/pokemon"
+require_relative "snowflakeapirb/deno"
+require_relative "snowflakeapirb/npm"
+require_relative "snowflakeapirb/me"
+require_relative "snowflakeapirb/github"
+require_relative "snowflakeapirb/pypi"
+require_relative "snowflakeapirb/token_info"
 class SnowflakeAPI
 	def initialize(api_key)
 		@token = api_key
@@ -50,25 +57,14 @@ class SnowflakeAPI
 	# Returns meme from 
 	# @param subreddit [String] subreddit to fetch meme from
 	# @return [Hash]
-	def meme(subreddit: nil)
+	def meme(subreddit)
 		resp = @connection.get("meme", { "sbr" => subreddit })
 		data = JSON.parse(resp.body)
 
 		if data["error"] and data["code"] and data["code"] != 200
 			raise RuntimeError.new("[#{data["code"]}] #{data["error"] or "Rejected with status code #{data["code"]}"}")
 		else
-			return {
-				"is_video" => data["isVideo"],
-				"nsfw" => data["nsfw"],
-				"created_at" => Date.parse(data["createdAt"]),
-				"url" => data["url"],
-				"upvotes" => data["ratings"]["upvote"],
-				"downvotes" => data["ratings"]["downvote"],
-				"comments" => data["ratings"]["comments"],
-				"subreddit" => data["subreddit"],
-				"title" => data["title"],
-				"link" => data["link"]
-			}
+			Spreader::Meme.new(data)
 		end
 	end
 
@@ -87,7 +83,7 @@ class SnowflakeAPI
 
 	# Returns Pokemon info
 	# @param name [String] Pokemon name
-	# @return [Hash]
+	# @return [Spreader::Pokemon]
 	def pokemon(name)
 		resp = @connection.get("pokemon", { "name" => name })
 		data = JSON.parse(resp.body)
@@ -95,17 +91,7 @@ class SnowflakeAPI
 		if data["error"] and data["code"] and data["code"] != 200
 			raise RuntimeError.new("[#{data["code"]}] #{data["error"] or "Rejected with status code #{data["code"]}"}")
 		else
-			return {
-				"name" => data["name"],
-				"id" => data["id"],
-				"base_experience" => data["baseExperience"],
-				"height" => data["height"],
-				"weight" => data["weight"],
-				"type" => data["type"],
-				"moves" => data["moves"],
-				"stats" => data["stats"],
-				"image" => data["image"]
-			}
+			Spreader::Pokemon.new(data)
 		end
 	end
 
@@ -139,7 +125,7 @@ class SnowflakeAPI
 
 	# Returns package information from denoland registry
 	# @param module [String] The module name
-	# @return [Hash]
+	# @return [Spreader::Deno]
 	def deno(package)
 		resp = @connection.get("registry/deno", { "module" => package })
 		data = JSON.parse(resp.body)
@@ -147,30 +133,13 @@ class SnowflakeAPI
 		if data["error"] and data["code"] and data["code"] != 200
 			raise RuntimeError.new("[#{data["code"]}] #{data["error"] or "Rejected with status code #{data["code"]}"}")
 		else
-			return {
-				"registry" => data["registry"],
-				"icon" => data["icon"],
-				"url" => data["url"],
-				"module" => {
-					"name" => data["module"]["name"],
-					"url" => data["module"]["url"],
-					"description" => data["module"]["description"],
-					"version" => data["module"]["version"],
-					"stars" => data["module"]["stars"],
-					"developer" => {
-						"name" => data["module"]["developer"]["name"],
-						"url" => data["module"]["developer"]["url"],
-					},
-					"github" => data["module"]["github"],
-					"created_at" => Date.parse(data["module"]["createdAt"])
-				}
-			}
+			Spreader::Deno.new(data)
 		end
 	end
 
 	# Returns package information from npmjs registry
 	# @param module [String] The module name
-	# @return [Hash]
+	# @return [Spreader::Npm]
 	def npm(package)
 		resp = @connection.get("registry/npm", { "module" => package })
 		data = JSON.parse(resp.body)
@@ -178,34 +147,13 @@ class SnowflakeAPI
 		if data["error"] and data["code"] and data["code"] != 200
 			raise RuntimeError.new("[#{data["code"]}] #{data["error"] or "Rejected with status code #{data["code"]}"}")
 		else
-			return {
-				"registry" => data["registry"],
-				"icon" => data["icon"],
-				"url" => data["url"],
-				"runkit" => data["runkit"],
-				"module" => {
-					"name" => data["module"]["name"],
-					"url" => data["module"]["url"],
-					"description" => data["module"]["description"],
-					"version" => data["module"]["version"],
-					"main" => data["module"]["main"],
-					"license" => data["module"]["license"],
-					"author" => data["module"]["author"],
-					"maintainers" => data["module"]["maintainers"],
-					"dependencies" => data["module"]["dependencies"],
-					"repository" => {
-						"type" => data["module"]["repository"]["type"],
-						"url" => data["module"]["repository"]["url"],
-					},
-					"banner" => data["module"]["banner"]
-				}
-			}
+			Spreader::Npm.new(data)
 		end
 	end
 
 	# Returns package information from pypi registry
 	# @param module [String] The module name
-	# @return [Hash]
+	# @return [Spreader::Pypi]
 	def pypi(package)
 		resp = @connection.get("registry/pypi", { "module" => package })
 		data = JSON.parse(resp.body)
@@ -213,21 +161,7 @@ class SnowflakeAPI
 		if data["error"] and data["code"] and data["code"] != 200
 			raise RuntimeError.new("[#{data["code"]}] #{data["error"] or "Rejected with status code #{data["code"]}"}")
 		else
-			return {
-				"registry" => data["registry"],
-				"icon" => data["icon"],
-				"url" => data["url"],
-				"module" => {
-					"name" => data["module"]["name"],
-					"description" => data["module"]["description"],
-					"url" => data["module"]["url"],
-					"version" => data["module"]["version"],
-					"author" => data["module"]["author"],
-					"updated_at" => Date.parse(data["module"]["updatedAt"]),
-					"documentation" => data["module"]["documentation"],
-					"homepage" => data["module"]["homepage"]
-				}
-			}
+			Spreader::Pypi.new(data)
 		end
 	end
 
@@ -275,7 +209,7 @@ class SnowflakeAPI
 
 	# Returns information about a discord token
 	# @param token [String] The discord token
-	# @return [Hash]
+	# @return [Spreader::Token_info]
 	def tokeninfo(token)
 		resp = @connection.get("tokeninfo", { "token" => token })
 		data = JSON.parse(resp.body)
@@ -283,25 +217,7 @@ class SnowflakeAPI
 		if data["error"] and data["code"] and data["code"] != 200
 			raise RuntimeError.new("[#{data["code"]}] #{data["error"] or "Rejected with status code #{data["code"]}"}")
 		else
-			return {
-				"type" => data["type"],
-				"token" => data["token"],
-				"id" => data["id"],
-				"username" => data["username"],
-				"discriminator" => data["discriminator"],
-				"avatar" => data["avatar"],
-				"avatar_url" => data["avatarURL"],
-				"snowflake_info" => {
-					"epoch" => data["snowflakeInfo"]["epoch"],
-					"timestamp" => data["snowflakeInfo"]["timestamp"],
-					"worker_id" => data["snowflakeInfo"]["workerID"],
-					"process_id" => data["snowflakeInfo"]["processID"],
-					"increment" => data["snowflakeInfo"]["increment"],
-					"binary" => data["snowflakeInfo"]["binary"],
-					"date" => Date.parse(data["snowflakeInfo"]["date"]),
-					"snowflake" => data["snowflakeInfo"]["snowflake"]
-				}
-			}
+			Spreader::Token_info.new(data)
 		end
 	end
 
@@ -319,7 +235,7 @@ class SnowflakeAPI
 	end
 
 	# Returns information about current user
-	# @return [Hash]
+	# @return [Spreader::Me]
 	def me
 		resp = @connection.get("me")
 		data = JSON.parse(resp.body)
@@ -327,21 +243,13 @@ class SnowflakeAPI
 		if data["error"] and data["code"] and data["code"] != 200
 			raise RuntimeError.new("[#{data["code"]}] #{data["error"] or "Rejected with status code #{data["code"]}"}")
 		else
-			return {
-				"user" => data["user"],
-				"pro" => data["pro"],
-				"ratelimits" => data["ratelimits"],
-				"banned" => data["banned"],
-				"requests" => data["requests"],
-				"token_created_timestamp" => data["tokenCreatedTimestamp"],
-				"created_timestamp" => data["createdTimestamp"]
-			}
+			Spreader::Me.new(data)
 		end
 	end
 
 	# Returns information about a github user
 	# @param user [String] The user's name
-	# @return [Hash]
+	# @return [Spreader::Github_Stats]
 	def githubstats(user)
 		resp = @connection.get("githubstats", { "username" => user })
 		data = JSON.parse(resp.body)
@@ -349,15 +257,11 @@ class SnowflakeAPI
 		if data["error"] and data["code"] and data["code"] != 200
 			raise RuntimeError.new("[#{data["code"]}] #{data["error"] or "Rejected with status code #{data["code"]}"}")
 		else
-			return {
-				"name" => data["name"],
-				"avatar" => data["avatar"],
-				"followers" => data["followers"],
-				"repos" => data["repos"],
-				"pull_requests" => data["pullRequests"],
-				"issues" => data["issues"],
-				"npm_downloads" => data['npmDownloads']
-			}
+			Spreader::Github_Stats.new(data)
 		end
 	end
 end
+
+worker = SnowflakeAPI.new('NzQ5OTM2ODMwMDk4NTcxMzM1.MTYyODcwMDcwNDA0Ng==.5a4557b6bd37ec088e79e2fa83445a9f')
+
+p worker.githubstats('rhydderchc').followers
