@@ -261,7 +261,3 @@ class SnowflakeAPI
 		end
 	end
 end
-
-worker = SnowflakeAPI.new('NzQ5OTM2ODMwMDk4NTcxMzM1.MTYyODcwMDcwNDA0Ng==.5a4557b6bd37ec088e79e2fa83445a9f')
-
-p worker.githubstats('rhydderchc').followers
